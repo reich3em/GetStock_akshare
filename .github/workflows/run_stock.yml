@@ -1,4 +1,4 @@
-name: Stock Data Downloader (Ashare Version)
+name: Stock Data Downloader (Ashare Loop Version)
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
         required: true
         default: '600900'
       period:
-        description: '周期 (1d, 1m, 5m, 15m, 30m, 60m)'
+        description: '周期 (1m, 5m, 15m, 30m, 60m)'
         required: true
         default: '1m'
       start_date:
@@ -16,15 +16,15 @@ on:
         required: true
         default: '2025-01-01'
       count:
-        description: '获取条数 (分钟线建议 5000 以上)'
+        description: '抓取深度 (1m建议填2000，腾讯接口上限约在此范围)'
         required: true
-        default: '6000'
+        default: '2000'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # 强制使用 Node 24 解决你日志中的警告
     env:
+      # 强制使用 Node 24 消除之前的警告
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       
     steps:
@@ -40,8 +40,9 @@ jobs:
         run: |
           pip install pandas requests
 
-      - name: Run Ashare Fetcher
+      - name: Run Fetcher
         run: |
+          # 注意：这里的参数名必须和 main.py 中的 argparse 对应
           python main.py \
             --symbol "${{ github.event.inputs.symbol }}" \
             --period "${{ github.event.inputs.period }}" \
