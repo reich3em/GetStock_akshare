@@ -4,7 +4,8 @@ from Ashare import get_price
 
 def format_code(symbol):
     """自动给代码补全前缀"""
-    if symbol.startswith('6'):
+    symbol = str(symbol)
+    if symbol.startswith(('6', '9', '5')):
         return 'sh' + symbol
     return 'sz' + symbol
 
@@ -17,24 +18,28 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    # 转换代码格式
+    # 1. 转换代码格式
     code = format_code(args.symbol)
     
-    # 获取数据
+    # 2. 获取数据
+    print(f"正在从腾讯接口获取 {code} 的数据...")
     df = get_price(code, frequency=args.period, count=args.count)
     
-    # 时间过滤
-    df['time'] = pd.to_datetime(df['time'])
-    df = df[df['time'] >= args.start]
-    
-    # 修改表头为中文，并解决乱码
-    df.columns = ['时间', '开盘', '收盘', '最高', '最低', '成交量']
-    
-    if not df.empty:
-        print(f"成功获取 {args.symbol} 数据：")
-        print(df.tail())
+    if df is not None and not df.empty:
+        # 3. 强制重命名列（解决 KeyError: 'time'）
+        # Ashare 返回的列通常是: 时间, 开盘, 收盘, 最高, 最低, 成交量
+        df.columns = ['time', 'open', 'close', 'high', 'low', 'volume']
+        
+        # 4. 时间过滤
+        df['time'] = pd.to_datetime(df['time'])
+        df = df[df['time'] >= args.start]
+        
+        # 5. 最终保存前转换为中文表头
+        df.columns = ['时间', '开盘', '收盘', '最高', '最低', '成交量']
+        
+        print(f"成功筛选出 {len(df)} 条数据。")
         filename = f"{args.symbol}_{args.period}.csv"
-        # 保持之前的 utf-8-sig 编码优化
         df.to_csv(filename, index=False, encoding='utf-8-sig')
+        print(f"文件保存成功: {filename}")
     else:
-        print("未筛选到指定日期范围内的数据。")
+        print("错误：未能获取到数据，请检查网络或股票代码。")
