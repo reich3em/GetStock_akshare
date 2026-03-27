@@ -4,25 +4,29 @@ on:
   workflow_dispatch:
     inputs:
       symbol:
-        description: '股票代码 (纯数字，如 600900 或 000001)'
+        description: '股票代码 (如 600900)'
         required: true
         default: '600900'
       period:
-        description: '颗粒度 (1d=日线, 1m/5m/15m/30m/60m=分钟线)'
+        description: '周期 (1d, 1m, 5m, 15m, 30m, 60m)'
         required: true
-        default: '1d'
+        default: '1m'
       start_date:
-        description: '数据开始日期 (YYYY-MM-DD)'
+        description: '开始日期 (YYYY-MM-DD)'
         required: true
         default: '2025-01-01'
       count:
-        description: '最大抓取条数 (默认1000条)'
+        description: '获取条数 (分钟线建议 5000 以上)'
         required: true
         default: '6000'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # 强制使用 Node 24 解决你日志中的警告
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,14 +43,14 @@ jobs:
       - name: Run Ashare Fetcher
         run: |
           python main.py \
-            --symbol ${{ github.event.inputs.symbol }} \
-            --period ${{ github.event.inputs.period }} \
-            --start ${{ github.event.inputs.start_date }} \
-            --count ${{ github.event.inputs.count }}
+            --symbol "${{ github.event.inputs.symbol }}" \
+            --period "${{ github.event.inputs.period }}" \
+            --start "${{ github.event.inputs.start_date }}" \
+            --count "${{ github.event.inputs.count }}"
 
       - name: Upload Result
         uses: actions/upload-artifact@v4
         with:
-          name: stock-data-${{ github.event.inputs.symbol }}-${{ github.event.inputs.period }}
+          name: stock-${{ github.event.inputs.symbol }}-${{ github.event.inputs.period }}
           path: "*.csv"
           retention-days: 7
