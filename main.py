@@ -31,4 +31,5 @@ if __name__ == "__main__":
     
     data = fetch_stock_data(args.symbol, args.period, args.start, args.end)
     print(data.tail()) # 输出最后5行到日志
-    data.to_csv(f"{args.symbol}_{args.period}.csv", index=False)
+    # 使用 utf-8-sig 编码，完美解决 Excel 打开乱码问题
+    data.to_csv(f"{args.symbol}_{args.period}.csv", index=False, encoding='utf-8-sig')
