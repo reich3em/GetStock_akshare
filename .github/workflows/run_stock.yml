@@ -1,0 +1,42 @@
+name: Stock Data Downloader
+
+on:
+  workflow_dispatch: # 允许手动输入参数
+    inputs:
+      symbol:
+        description: '股票代码 (如 000001)'
+        required: true
+        default: '000001'
+      period:
+        description: '颗粒度 (daily, 1, 5, 15, 60)'
+        required: true
+        default: 'daily'
+      start_date:
+        description: '开始日期 (YYYYMMDD)'
+        default: '20250101'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install akshare pandas
+
+      - name: Run Fetcher
+        run: |
+          python main.py --symbol ${{ github.event.inputs.symbol }} --period ${{ github.event.inputs.period }} --start ${{ github.event.inputs.start_date }}
+
+      - name: Upload Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-data-${{ github.event.inputs.symbol }}
+          path: "*.csv"
